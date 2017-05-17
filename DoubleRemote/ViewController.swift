@@ -169,7 +169,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
             } else {
                 img = UIImagePNGRepresentation(theImage)
             }
-            `
+            
             let buffer: Data = img!
             let length = buffer.count
             streamSizeStatus.text = String(length)

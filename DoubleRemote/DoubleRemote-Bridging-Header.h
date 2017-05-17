@@ -17,7 +17,3 @@ void camMedium() {
 void camLow() {
     [[DRCameraKit sharedCameraKit] setCameraSettingsWithArray:(cameraSetting *)kCameraSettings640x480_15FPS_ISP];
 }
-
-void camNight() {
-    [[DRCameraKit sharedCameraKit] setCameraSettingsWithArray:(cameraSetting *)kCameraSettingsFullRes_15FPS_low ];
-}

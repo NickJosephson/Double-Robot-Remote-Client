@@ -82,8 +82,6 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         
         inputStream.open()
         outputStream.open()
-        
-        print("net init")
     }
     
     func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
@@ -109,7 +107,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
                 print("send stuff")
             }
         case Stream.Event.errorOccurred:
-            print("CONNECTION ERROR: Connection to the host  failed!")
+            print("CONNECTION ERROR: Connection to the host failed!")
             remoteConnectionStatus.text = "Not Connected"
         case Stream.Event.endEncountered:
             print("\( (aStream == inputStream ) ? "Input" : "Output" ) stream closed")
@@ -262,51 +260,14 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     
     @IBAction func setLow(_ sender: UIButton) {
         camLow()
-        //currentFrame = #imageLiteral(resourceName: "hcilogo")
     }
     
     @IBAction func setMedium(_ sender: UIButton) {
         camMedium()
-        //currentFrame = #imageLiteral(resourceName: "car")
     }
     
     @IBAction func setHigh(_ sender: UIButton) {
         camHigh()
-        //currentFrame = #imageLiteral(resourceName: "snow")
-    }
-    
-    @IBAction func setNight(_ sender: UIButton) {
-        /*
-        if outputStream != nil && outputStream.hasSpaceAvailable {
-            var bytesSent = 0
-            
-            let img = UIImageJPEGRepresentation(currentFrame!, 1.0)
-            
-            let buffer: Data = img! as Data
-            let length = buffer.count
-            
-            //Convert Data to [UInt8] array
-            var myArray = [UInt8](repeating: 0, count: length)
-            buffer.copyBytes(to: &myArray, count: length)
-            
-            //sent size header
-            let header = "\(length)\n"
-            let headData: Data = header.data(using: String.Encoding.ascii)! as Data
-            var headArray = [UInt8](repeating: 0, count: headData.count)
-            headData.copyBytes(to: &headArray, count: headData.count)
-            outputStream.write(&headArray, maxLength: headArray.count)
-
-            
-            while bytesSent < length {
-                let result = outputStream.write(&myArray + bytesSent, maxLength: length - bytesSent)
-                if result > 0 {
-                    bytesSent += result
-                } else {
-                    print(outputStream.streamError.debugDescription)
-                    bytesSent = length
-                }
-            }
-        }*/
     }
     
     @IBAction func park(_ sender: UIButton) {

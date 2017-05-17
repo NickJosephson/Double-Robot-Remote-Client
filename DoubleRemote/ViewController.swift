@@ -22,6 +22,8 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     @IBOutlet weak var ipTextField: UITextField!
     @IBOutlet weak var portTextField: UITextField!
     @IBOutlet weak var slider: UISlider!
+    @IBOutlet weak var streamSizeStatus: UILabel!
+    @IBOutlet weak var formatSelector: UISegmentedControl!
     
     // MARK: Control Vars
     
@@ -161,10 +163,16 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         currentFrame = theImage
         
         if outputStream != nil && outputStream.hasSpaceAvailable {
-            let img = UIImageJPEGRepresentation(theImage, CGFloat(slider.value))
-                        
-            let buffer: Data = img! as Data
+            let img: Data?
+            if formatSelector.selectedSegmentIndex == 0 {
+                img = UIImageJPEGRepresentation(theImage, CGFloat(slider.value))
+            } else {
+                img = UIImagePNGRepresentation(theImage)
+            }
+            `
+            let buffer: Data = img!
             let length = buffer.count
+            streamSizeStatus.text = String(length)
             
             //Convert Data to [UInt8] array
             var myArray = [UInt8](repeating: 0, count: length)
@@ -245,7 +253,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     @IBAction func charge(_ sender: UIButton) {
         DRCameraKit.shared().startCharging()
     }
-    
+
     @IBAction func stopCharge(_ sender: UIButton) {
         DRCameraKit.shared().stopCharging()
     }

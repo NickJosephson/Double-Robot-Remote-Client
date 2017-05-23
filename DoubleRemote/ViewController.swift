@@ -49,8 +49,8 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     
     // MARK: Socket Stream Vars
     
-    private var inputStream: InputStream!
-    private var outputStream: OutputStream!
+    private var inputStream: InputStream?
+    private var outputStream: OutputStream?
     
     // MARK: View Controller Lifecycle
     
@@ -68,22 +68,16 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     // MARK: Socket Stream Methods
     
     func initNetworkCommunication(ip: String, port: Int) {
-        var inp :InputStream?
-        var out :OutputStream?
+        Stream.getStreamsToHost(withName: ip, port: port, inputStream: &inputStream, outputStream: &outputStream)
         
-        Stream.getStreamsToHost(withName: ip, port: port, inputStream: &inp, outputStream: &out)
+        inputStream!.delegate = self
+        outputStream!.delegate = self
         
-        inputStream = inp!
-        outputStream = out!
+        inputStream!.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+        outputStream!.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
         
-        inputStream.delegate = self
-        outputStream.delegate = self
-        
-        inputStream.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-        outputStream.schedule(in: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-        
-        inputStream.open()
-        outputStream.open()
+        inputStream!.open()
+        outputStream!.open()
     }
     
     func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
@@ -97,8 +91,8 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
                 var input = ""
                 var readByte :UInt8 = 0
                 
-                while inputStream.hasBytesAvailable {
-                    inputStream.read(&readByte, maxLength: 1)
+                while inputStream!.hasBytesAvailable {
+                    inputStream!.read(&readByte, maxLength: 1)
                     input.append(Character(UnicodeScalar(readByte)))
                 }
                 
@@ -141,7 +135,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
             DRDouble.shared().poleUp()
         case "d\n": //pole down
             DRDouble.shared().poleDown()
-        case "h\n": //stop drive and turn
+        case "h\n": //stop pole
             DRDouble.shared().poleStop()
         case "p\n": //park
             toggleKickstand()
@@ -162,7 +156,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     func cameraKit(_ theKit: DRCameraKit!, didReceive theImage: UIImage!, sizeInBytes length: Int) {
         currentFrame = theImage
         
-        if outputStream != nil && outputStream.hasSpaceAvailable {
+        if outputStream != nil && outputStream!.hasSpaceAvailable {
             let img: Data?
             if formatSelector.selectedSegmentIndex == 0 {
                 img = UIImageJPEGRepresentation(theImage, CGFloat(slider.value))
@@ -183,16 +177,16 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
             let headData: Data = header.data(using: String.Encoding.ascii)! as Data
             var headArray = [UInt8](repeating: 0, count: headData.count)
             headData.copyBytes(to: &headArray, count: headData.count)
-            outputStream.write(&headArray, maxLength: headArray.count)
+            outputStream!.write(&headArray, maxLength: headArray.count)
             
             //send data
             var bytesSent = 0
             while bytesSent < length {
-                let result = outputStream.write(&myArray + bytesSent, maxLength: length - bytesSent)
+                let result = outputStream!.write(&myArray + bytesSent, maxLength: length - bytesSent)
                 if result > 0 {
                     bytesSent += result
                 } else {
-                    print(outputStream.streamError.debugDescription)
+                    print(outputStream!.streamError.debugDescription)
                     bytesSent = length
                 }
             }

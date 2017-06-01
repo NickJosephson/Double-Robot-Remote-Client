@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelegate, DRCameraKitConnectionDelegate, DRCameraKitControlDelegate,StreamDelegate {
+class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelegate, DRCameraKitConnectionDelegate, StreamDelegate {
     
     // MARK: IB Outlets
     
@@ -26,16 +26,26 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     @IBOutlet weak var formatSelector: UISegmentedControl!
     
     // MARK: Control Vars
-    
+
     private var drive: Float = 0.0 {
         didSet {
             print("Drive: \(drive)")
+            if drive == 0 {
+                DRCameraKit.shared().setLED(UIColor.red)
+            } else {
+                DRCameraKit.shared().setLED(UIColor.green)
+            }
         }
     }
     
     private var turn: Float = 0.0 {
         didSet {
             print("Turn: \(turn)")
+            if drive == 0 && turn != 0 {
+                DRCameraKit.shared().setLED(UIColor.yellow)
+            } else {
+                DRCameraKit.shared().setLED(UIColor.red)
+            }
         }
     }
     
@@ -51,6 +61,19 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     
     private var inputStream: InputStream?
     private var outputStream: OutputStream?
+    private var connected = false {
+        didSet {
+            if connected {
+                remoteConnectionStatus.text = "Connected"
+            } else {
+                inputStream?.close();
+                inputStream?.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+                outputStream?.close();
+                outputStream?.remove(from: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
+                remoteConnectionStatus.text = "Not Connected"
+            }
+        }
+    }
     
     // MARK: View Controller Lifecycle
     
@@ -85,7 +108,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         switch eventCode {
         case Stream.Event.openCompleted:
             print("\( (aStream == inputStream ) ? "Input" : "Output" ) stream open")
-            remoteConnectionStatus.text = "Connected"
+            connected = true
         case Stream.Event.hasBytesAvailable:
             if aStream == inputStream {
                 var input = ""
@@ -100,17 +123,17 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
             }
         case Stream.Event.hasSpaceAvailable:
             if aStream == outputStream {
-                print("send stuff")
+                print("Output stream has space available")
             }
         case Stream.Event.errorOccurred:
             print("CONNECTION ERROR: Connection to the host failed!")
-            remoteConnectionStatus.text = "Not Connected"
+            connected = false
         case Stream.Event.endEncountered:
             print("\( (aStream == inputStream ) ? "Input" : "Output" ) stream closed")
-            remoteConnectionStatus.text = "Not Connected"
+            connected = false
         default:
             print("CONNECTION ERROR")
-            remoteConnectionStatus.text = "Connection Error"
+            connected = false
         }
     }
     
@@ -140,7 +163,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         case "p\n": //park
             toggleKickstand()
         default:
-            print("Recived unrecognized command: \"\(command)\"")
+            print("Recived unrecognized command: \"\(command.replacingOccurrences(of: "\n", with: "\\n"))\"")
         }
     }
     
@@ -150,13 +173,14 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         cameraConnectionStatus.text = (theKit.isConnected()) ? "Connected" : "Not Connected"
         if (theKit.isConnected()) {
             camLow()
+            theKit.startVideo()
         }
     }
     
     func cameraKit(_ theKit: DRCameraKit!, didReceive theImage: UIImage!, sizeInBytes length: Int) {
         currentFrame = theImage
         
-        if outputStream != nil && outputStream!.hasSpaceAvailable {
+        if connected && outputStream!.hasSpaceAvailable {
             let img: Data?
             if formatSelector.selectedSegmentIndex == 0 {
                 img = UIImageJPEGRepresentation(theImage, CGFloat(slider.value))
@@ -191,12 +215,6 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
                 }
             }
         }
-    }
-    
-    func cameraKitReceivedStatusUpdate(_ theKit: DRCameraKit!) {
-        theKit.startVideo()
-        theKit.startCharging()
-        
     }
     
     // MARK: Double Control Delegate Methods

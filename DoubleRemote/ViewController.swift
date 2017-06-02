@@ -111,15 +111,12 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
             connected = true
         case Stream.Event.hasBytesAvailable:
             if aStream == inputStream {
-                var input = ""
-                var readByte :UInt8 = 0
-                
                 while inputStream!.hasBytesAvailable {
+                    var readByte :UInt8 = 0
                     inputStream!.read(&readByte, maxLength: 1)
-                    input.append(Character(UnicodeScalar(readByte)))
+                    
+                    handle(command: Character(UnicodeScalar(readByte)))
                 }
-                
-                handleCommand(input)
             }
         case Stream.Event.hasSpaceAvailable:
             if aStream == outputStream {
@@ -137,33 +134,33 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         }
     }
     
-    func handleCommand(_ command: String) {
+    func handle(command: Character) {
         switch command {
-        case "f\n": //forward
+        case "f": //forward
             drive = 1
-        case "b\n": //back
+        case "b": //back
             drive = -1
-        case "l\n": //left
+        case "l": //left
             turn = -1
-        case "r\n": //right
+        case "r": //right
             turn = 1
-        case "s\n": //stop drive
+        case "s": //stop drive
             drive = 0
-        case "t\n": //stop turn
+        case "t": //stop turn
             turn = 0
-        case "x\n": //stop drive and turn
+        case "x": //stop drive and turn
             drive = 0
             turn = 0
-        case "u\n": //pole up
+        case "u": //pole up
             DRDouble.shared().poleUp()
-        case "d\n": //pole down
+        case "d": //pole down
             DRDouble.shared().poleDown()
-        case "h\n": //stop pole
+        case "h": //stop pole
             DRDouble.shared().poleStop()
-        case "p\n": //park
+        case "p": //park
             toggleKickstand()
         default:
-            print("Recived unrecognized command: \"\(command.replacingOccurrences(of: "\n", with: "\\n"))\"")
+            print("Recived unrecognized command: \"\(command)\"")
         }
     }
     

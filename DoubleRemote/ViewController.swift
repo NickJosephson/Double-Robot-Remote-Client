@@ -12,24 +12,32 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     
     // MARK: IB Outlets
     
-    @IBOutlet weak var connectionStatus: UILabel!
-    @IBOutlet weak var cameraConnectionStatus: UILabel!
+    // robot status
+    @IBOutlet weak var robotConnectionStatus: UILabel!
     @IBOutlet weak var poleHeightStatus: UILabel!
     @IBOutlet weak var kickstandStatus: UILabel!
     @IBOutlet weak var robotBatteryStatus: UILabel!
+    
+    // camera view, status, and settings
+    @IBOutlet weak var cameraConnectionStatus: UILabel!
     @IBOutlet weak var cameraView: UIImageView!
-    @IBOutlet weak var remoteConnectionStatus: UILabel!
-    @IBOutlet weak var ipTextField: UITextField!
-    @IBOutlet weak var portTextField: UITextField!
     @IBOutlet weak var slider: UISlider!
     @IBOutlet weak var streamSizeStatus: UILabel!
     @IBOutlet weak var formatSelector: UISegmentedControl!
+    
+    // remote connection status and settings
+    @IBOutlet weak var remoteConnectionStatus: UILabel!
+    @IBOutlet weak var ipTextField: UITextField!
+    @IBOutlet weak var portTextField: UITextField!
+
     
     // MARK: Control Vars
 
     private var drive: Float = 0.0 {
         didSet {
             print("Drive: \(drive)")
+            
+            //set camera status LEDs
             if drive == 0 {
                 DRCameraKit.shared().setLED(UIColor.red)
             } else {
@@ -41,6 +49,8 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     private var turn: Float = 0.0 {
         didSet {
             print("Turn: \(turn)")
+            
+            //set camera status LEDs
             if drive == 0 && turn != 0 {
                 DRCameraKit.shared().setLED(UIColor.yellow)
             } else {
@@ -49,13 +59,16 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         }
     }
     
+    
     // MARK: Camera Vars
     
     private var currentFrame: UIImage? {
         didSet {
+            //update UI
             cameraView.image = currentFrame
         }
     }
+    
     
     // MARK: Socket Stream Vars
     
@@ -63,6 +76,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     private var outputStream: OutputStream?
     private var connected = false {
         didSet {
+            //update UI and clean up streams if needed
             if connected {
                 remoteConnectionStatus.text = "Connected"
             } else {
@@ -75,18 +89,21 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         }
     }
     
+    
     // MARK: View Controller Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
+        // set up delagates
         DRDouble.shared().delegate = self
         DRCameraKit.shared().imageDelegate = self
         DRCameraKit.shared().connectionDelegate = self
         
         print("Control SDK: \( kDoubleBasicSDKVersion ), Camera SDK: \( kCameraKitSDKVersion )")
     }
+    
     
     // MARK: Socket Stream Methods
     
@@ -104,13 +121,15 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     }
     
     func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
-        print("got an event")
+        print("Stream event:")
         switch eventCode {
         case Stream.Event.openCompleted:
-            print("\( (aStream == inputStream ) ? "Input" : "Output" ) stream open")
+            print("\( (aStream == inputStream ) ? "Input" : "Output" ) stream open.")
             connected = true
         case Stream.Event.hasBytesAvailable:
             if aStream == inputStream {
+                // Loop through availible data one byte at a time, processing the byte
+                // as an ASCII character corresponding to a specific command.
                 while inputStream!.hasBytesAvailable {
                     var readByte :UInt8 = 0
                     inputStream!.read(&readByte, maxLength: 1)
@@ -120,13 +139,13 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
             }
         case Stream.Event.hasSpaceAvailable:
             if aStream == outputStream {
-                print("Output stream has space available")
+                print("Output stream has space available.")
             }
         case Stream.Event.errorOccurred:
             print("CONNECTION ERROR: Connection to the host failed!")
             connected = false
         case Stream.Event.endEncountered:
-            print("\( (aStream == inputStream ) ? "Input" : "Output" ) stream closed")
+            print("\( (aStream == inputStream ) ? "Input" : "Output" ) stream closed.")
             connected = false
         default:
             print("CONNECTION ERROR")
@@ -164,10 +183,14 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         }
     }
     
+    
     // MARK: Camera Kit Delegate Methods
     
     func cameraKitConnectionStatusDidChange(_ theKit: DRCameraKit!) {
+        //update UI
         cameraConnectionStatus.text = (theKit.isConnected()) ? "Connected" : "Not Connected"
+        
+        //configure camera
         if (theKit.isConnected()) {
             camLow()
             theKit.startVideo()
@@ -175,61 +198,69 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     }
     
     func cameraKit(_ theKit: DRCameraKit!, didReceive theImage: UIImage!, sizeInBytes length: Int) {
+        //update UI
         currentFrame = theImage
         
+        //send frame over socket stream (if connected)
         if connected && outputStream!.hasSpaceAvailable {
-            let img: Data?
+            //get image representation in desired format
+            let image: Data!
             if formatSelector.selectedSegmentIndex == 0 {
-                img = UIImageJPEGRepresentation(theImage, CGFloat(slider.value))
+                image = UIImageJPEGRepresentation(theImage, CGFloat(slider.value))
             } else {
-                img = UIImagePNGRepresentation(theImage)
+                image = UIImagePNGRepresentation(theImage)
             }
+            let imageSize = image.count //number of bytes in image
             
-            let buffer: Data = img!
-            let length = buffer.count
-            streamSizeStatus.text = String(length)
+            //update UI
+            streamSizeStatus.text = String(imageSize)
             
-            //Convert Data to [UInt8] array
-            var myArray = [UInt8](repeating: 0, count: length)
-            buffer.copyBytes(to: &myArray, count: length)
+            //Convert image Data to [UInt8] array
+            var imageData = [UInt8](repeating: 0, count: imageSize) //zero out array
+            image.copyBytes(to: &imageData, count: imageSize)
             
-            //sent size header
-            let header = "\(length)\n"
-            let headData: Data = header.data(using: String.Encoding.ascii)! as Data
-            var headArray = [UInt8](repeating: 0, count: headData.count)
-            headData.copyBytes(to: &headArray, count: headData.count)
-            outputStream!.write(&headArray, maxLength: headArray.count)
+            //sent size header as number of bytes in image represented with an ASCII string terminating with a newline
+            let header: Data = "\(imageSize)\n".data(using: String.Encoding.ascii)! as Data
+            var headerData = [UInt8](repeating: 0, count: header.count)
+            header.copyBytes(to: &headerData, count: header.count)
+            outputStream!.write(&headerData, maxLength: headerData.count)
             
-            //send data
+            //send data, looping through output stream writes until all datat is written
             var bytesSent = 0
-            while bytesSent < length {
-                let result = outputStream!.write(&myArray + bytesSent, maxLength: length - bytesSent)
-                if result > 0 {
+            while bytesSent < imageSize {
+                let result = outputStream!.write(&imageData + bytesSent, maxLength: imageSize - bytesSent)
+                if result >= 0 { //data was sent or stream is at capacity
                     bytesSent += result
-                } else {
+                } else { //an error occured
                     print(outputStream!.streamError.debugDescription)
-                    bytesSent = length
+                    connected = false
+                    bytesSent = imageSize //give up, exit loop
                 }
             }
         }
     }
     
+    
     // MARK: Double Control Delegate Methods
     
     func doubleDidConnect(_ theDouble: DRDouble!) {
-        connectionStatus.text = "Connected"
+        //update UI
+        robotConnectionStatus.text = "Connected"
     }
     
     func doubleDidDisconnect(_ theDouble: DRDouble!) {
-        connectionStatus.text = "Not Connected"
+        //update UI
+        robotConnectionStatus.text = "Not Connected"
     }
     
     func doubleStatusDidUpdate(_ theDouble: DRDouble!) {
+        //update UI
         poleHeightStatus.text = String(DRDouble.shared().poleHeightPercent)
         kickstandStatus.text = String(DRDouble.shared().kickstandState)
         robotBatteryStatus.text = String(DRDouble.shared().batteryPercent)
     }
     
+    //DRDouble calls this method when looking for next driving update
     func doubleDriveShouldUpdate(_ theDouble: DRDouble!) {
         DRDouble.shared().variableDrive(drive, turn: turn)
     }
@@ -241,14 +272,15 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         turn = 0
         
         switch DRDouble.shared().kickstandState {
-        case 1:
+        case 1: //kickstand is out
             DRDouble.shared().retractKickstands()
-        case 2:
+        case 2: //kickstand is in
             DRDouble.shared().deployKickstands()
         default:
             print("error parking/unparking")
         }
     }
+    
     
     // MARK: IB Actions
     
@@ -259,21 +291,23 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         initNetworkCommunication(ip: ip, port: port)
     }
     
-    @IBAction func charge(_ sender: UIButton) {
-        DRCameraKit.shared().startCharging()
+    @IBAction func startCharging(_ sender: UIButton) {
+        DRCameraKit.shared().startCharging() //camera kit starts charging the ipad
     }
 
-    @IBAction func stopCharge(_ sender: UIButton) {
-        DRCameraKit.shared().stopCharging()
+    @IBAction func stopCharging(_ sender: UIButton) {
+        DRCameraKit.shared().stopCharging() //camera kit stops charging the ipad
     }
     
     @IBAction func startCam(_ sender: UIButton) {
-        DRCameraKit.shared().startVideo()
+        DRCameraKit.shared().startVideo() //camera stops updating
     }
     
     @IBAction func stopCam(_ sender: UIButton) {
-        DRCameraKit.shared().stopVideo()
+        DRCameraKit.shared().stopVideo() //camera starts updating
     }
+    
+    // camera quality setting methods
     
     @IBAction func setLow(_ sender: UIButton) {
         camLow()
@@ -286,6 +320,8 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
     @IBAction func setHigh(_ sender: UIButton) {
         camHigh()
     }
+    
+    // robot local control
     
     @IBAction func park(_ sender: UIButton) {
         toggleKickstand()

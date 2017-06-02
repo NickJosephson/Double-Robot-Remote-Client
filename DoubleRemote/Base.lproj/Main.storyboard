@@ -304,7 +304,7 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                 <state key="normal" title="Stop Charge"/>
                                 <connections>
-                                    <action selector="stopCharge:" destination="BYZ-38-t0r" eventType="touchUpInside" id="rpu-uQ-VHY"/>
+                                    <action selector="stopCharging:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Q93-XJ-XK4"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Fju-HI-KDv">
@@ -313,7 +313,7 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                 <state key="normal" title="Start Charge"/>
                                 <connections>
-                                    <action selector="charge:" destination="BYZ-38-t0r" eventType="touchUpInside" id="0hr-ei-mro"/>
+                                    <action selector="startCharging:" destination="BYZ-38-t0r" eventType="touchUpInside" id="aYZ-x2-9TI"/>
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="0" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Hkb-MX-H2M">

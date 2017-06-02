@@ -3,8 +3,10 @@
 //
 
 #import <CameraKitSDK/CameraKitSDK.h>
-
 #import <DoubleControlSDK/DoubleControlSDK.h>
+
+
+//DRCamera configuration methods
 
 void camHigh() {
     [[DRCameraKit sharedCameraKit] setCameraSettingsWithArray:(cameraSetting *)kCameraSettingsFullRes_15FPS];

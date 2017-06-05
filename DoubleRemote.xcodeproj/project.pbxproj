@@ -344,6 +344,7 @@
 				E1FE35BA1EC393B000521B71 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

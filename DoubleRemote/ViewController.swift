@@ -103,7 +103,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         
         print("Control SDK: \( kDoubleBasicSDKVersion ), Camera SDK: \( kCameraKitSDKVersion )")
     }
-    
+
     
     // MARK: Socket Stream Methods
     

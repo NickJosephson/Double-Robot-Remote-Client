@@ -349,7 +349,6 @@
                     <connections>
                         <outlet property="cameraConnectionStatus" destination="kQV-qp-ftN" id="sM7-54-Eav"/>
                         <outlet property="cameraView" destination="aLr-T8-YZv" id="7xo-gF-50l"/>
-                        <outlet property="connectionStatus" destination="pCq-TI-Au5" id="7f7-dP-Sqp"/>
                         <outlet property="formatSelector" destination="97O-f7-smH" id="ZxY-7O-3wk"/>
                         <outlet property="ipTextField" destination="VyD-Fl-1Ij" id="vNe-Rd-rRi"/>
                         <outlet property="kickstandStatus" destination="2EQ-fX-kjF" id="zbL-TN-wK2"/>
@@ -357,6 +356,7 @@
                         <outlet property="portTextField" destination="zMH-kM-vTD" id="nrG-TF-rql"/>
                         <outlet property="remoteConnectionStatus" destination="6Ua-a8-5Dy" id="os9-gb-3ME"/>
                         <outlet property="robotBatteryStatus" destination="hzC-A2-Rpx" id="MVf-ZM-gT0"/>
+                        <outlet property="robotConnectionStatus" destination="pCq-TI-Au5" id="yCM-p8-5Bu"/>
                         <outlet property="slider" destination="2n8-M9-Q51" id="mSc-FL-4IP"/>
                         <outlet property="streamSizeStatus" destination="Hkb-MX-H2M" id="XsN-Me-0id"/>
                     </connections>

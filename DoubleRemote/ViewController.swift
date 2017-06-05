@@ -290,21 +290,21 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         
         initNetworkCommunication(ip: ip, port: port)
     }
-    
-    @IBAction func startCharging(_ sender: UIButton) {
-        DRCameraKit.shared().startCharging() //camera kit starts charging the ipad
-    }
-
-    @IBAction func stopCharging(_ sender: UIButton) {
-        DRCameraKit.shared().stopCharging() //camera kit stops charging the ipad
-    }
-    
+ 
     @IBAction func startCam(_ sender: UIButton) {
         DRCameraKit.shared().startVideo() //camera stops updating
     }
     
     @IBAction func stopCam(_ sender: UIButton) {
         DRCameraKit.shared().stopVideo() //camera starts updating
+    }
+    
+    @IBAction func startCharging(_ sender: UIButton) {
+        DRCameraKit.shared().startCharging() //camera kit starts charging the ipad
+    }
+    
+    @IBAction func stopCharging(_ sender: UIButton) {
+        DRCameraKit.shared().stopCharging() //camera kit stops charging the ipad
     }
     
     // camera quality setting methods

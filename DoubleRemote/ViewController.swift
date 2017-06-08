@@ -130,12 +130,24 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
             if aStream == inputStream {
                 // Loop through availible data one byte at a time, processing the byte
                 // as an ASCII character corresponding to a specific command.
+                /*
                 while inputStream!.hasBytesAvailable {
                     var readByte :UInt8 = 0
                     inputStream!.read(&readByte, maxLength: 1)
                     
                     handle(command: Character(UnicodeScalar(readByte)))
+                } 
+                */
+                
+                var input = ""
+                var readByte :UInt8 = 0
+                
+                while inputStream!.hasBytesAvailable {
+                    inputStream!.read(&readByte, maxLength: 1)
+                    input.append(Character(UnicodeScalar(readByte)))
                 }
+                
+                handle(command: input)
             }
         case Stream.Event.hasSpaceAvailable:
             if aStream == outputStream {
@@ -153,33 +165,47 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
         }
     }
     
-    func handle(command: Character) {
-        switch command {
-        case "f": //forward
-            drive = 1
-        case "b": //back
-            drive = -1
-        case "l": //left
-            turn = -1
-        case "r": //right
-            turn = 1
-        case "s": //stop drive
-            drive = 0
-        case "t": //stop turn
-            turn = 0
-        case "x": //stop drive and turn
-            drive = 0
-            turn = 0
-        case "u": //pole up
-            DRDouble.shared().poleUp()
-        case "d": //pole down
-            DRDouble.shared().poleDown()
-        case "h": //stop pole
-            DRDouble.shared().poleStop()
-        case "p": //park
-            toggleKickstand()
-        default:
-            print("Recived unrecognized command: \"\(command)\"")
+    func handle(command: String) {
+        if let key = command.characters.first {
+            switch key {
+            case "f": //forward
+                drive = 1
+            case "b": //back
+                drive = -1
+            case "l": //left
+                turn = -1
+            case "r": //right
+                turn = 1
+            case "s": //stop drive
+                drive = 0
+            case "t": //stop turn
+                turn = 0
+            case "x": //stop drive and turn
+                drive = 0
+                turn = 0
+            case "u": //pole up
+                DRDouble.shared().poleUp()
+            case "d": //pole down
+                DRDouble.shared().poleDown()
+            case "h": //stop pole
+                DRDouble.shared().poleStop()
+            case "p": //park
+                toggleKickstand()
+            case "n": //variable drive
+                let index = command.index(command.startIndex, offsetBy: 1)
+                let str = command.substring(from: index)
+                if let speed: Float = Float(str) {
+                    drive = speed
+                }
+            case "m": //variable turn
+                let index = command.index(command.startIndex, offsetBy: 1)
+                let str = command.substring(from: index)
+                if let speed: Float = Float(str) {
+                    turn = speed
+                }
+            default:
+                print("Recived unrecognized command: \"\(command)\"")
+            }
         }
     }
     

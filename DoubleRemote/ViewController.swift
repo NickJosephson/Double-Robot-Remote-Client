@@ -157,7 +157,7 @@ class ViewController: UIViewController, DRDoubleDelegate, DRCameraKitImageDelega
             print("CONNECTION ERROR: Connection to the host failed!")
             connected = false
         case Stream.Event.endEncountered:
-            print("\( (aStream == inputStream ) ? "Input" : "Output" ) stream closed.")
+            print("\( (aStream == inputStream) ? "Input" : "Output" ) stream closed.")
             connected = false
         default:
             print("CONNECTION ERROR")
